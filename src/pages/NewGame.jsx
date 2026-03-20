@@ -17,7 +17,20 @@ export const NewGame = () => {
     setLoading(true);
 
     try {
-      const { data, error } = await supabase
+      // Fetch user's username (or use email as fallback)
+      const { data: userProfiles, error: profileError } = await supabase
+        .from('user_profiles')
+        .select('username')
+        .eq('id', user.id);
+
+      // Use existing username or default to email
+      let username = user.email.split('@')[0];
+      if (!profileError && userProfiles && userProfiles.length > 0) {
+        username = userProfiles[0].username;
+      }
+
+      // Create the game
+      const { data: gameDataArray, error: gameError } = await supabase
         .from('games')
         .insert([
           {
@@ -25,11 +38,29 @@ export const NewGame = () => {
             user_id: user.id,
           },
         ])
-        .select()
-        .single();
+        .select();
 
-      if (error) throw error;
-      navigate(`/game/${data.id}`);
+      if (gameError) throw gameError;
+      if (!gameDataArray || gameDataArray.length === 0) {
+        throw new Error('Failed to create game');
+      }
+
+      const gameData = gameDataArray[0];
+
+      // Insert the creator as the first player
+      const { error: playerError } = await supabase
+        .from('game_players')
+        .insert([
+          {
+            game_id: gameData.id,
+            player_name: username,
+            user_id: user.id,
+          },
+        ]);
+
+      if (playerError) throw playerError;
+
+      navigate(`/game/${gameData.id}`);
     } catch (err) {
       setError(err.message);
       setLoading(false);

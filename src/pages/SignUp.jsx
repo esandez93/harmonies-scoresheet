@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import '../styles/auth.css';
 
 export const SignUp = () => {
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -15,6 +16,16 @@ export const SignUp = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    if (!username.trim()) {
+      setError('Username is required');
+      return;
+    }
+
+    if (username.length < 3 || username.length > 50) {
+      setError('Username must be 3-50 characters long');
+      return;
+    }
 
     if (password !== confirmPassword) {
       setError('Passwords do not match');
@@ -29,7 +40,7 @@ export const SignUp = () => {
     setLoading(true);
 
     try {
-      await signUp(email, password);
+      await signUp(email, password, username);
       navigate('/login');
     } catch (err) {
       setError(err.message);
@@ -43,6 +54,21 @@ export const SignUp = () => {
       <div className="auth-box">
         <h1>Create Account</h1>
         <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label htmlFor="username">Username</label>
+            <input
+              id="username"
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+              disabled={loading}
+              placeholder="Choose your username"
+              title="3-50 characters"
+            />
+            <small className="form-hint">3-50 characters, spaces allowed</small>
+          </div>
+
           <div className="form-group">
             <label htmlFor="email">Email</label>
             <input

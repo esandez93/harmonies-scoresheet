@@ -1,0 +1,232 @@
+/* Accept Invitation Page Styles */
+
+.accept-invitation-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+}
+
+.invitation-container {
+  background: white;
+  border-radius: 12px;
+  padding: 48px 32px;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  animation: slideUp 0.5s ease-in-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.invitation-container h1 {
+  margin: 24px 0 16px 0;
+  font-size: 32px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.invitation-container p {
+  margin: 12px 0;
+  color: #666;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.invitation-info {
+  font-size: 16px;
+  color: #333;
+  margin: 20px 0;
+  line-height: 1.6;
+}
+
+.invitation-info strong {
+  color: #667eea;
+  font-weight: 600;
+}
+
+.invitation-redirect {
+  color: #999;
+  font-size: 14px;
+  margin-top: 20px;
+}
+
+.invitation-email {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #eee;
+  font-size: 14px;
+  color: #999;
+}
+
+.invitation-email strong {
+  color: #666;
+  font-weight: 500;
+}
+
+/* Icons */
+.loading-icon,
+.success-icon,
+.invite-icon,
+.error-icon {
+  font-size: 64px;
+  margin-bottom: 24px;
+  animation: bounce 1s infinite;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.success-icon {
+  color: #4caf50;
+  animation: scaleIn 0.6s ease-out;
+}
+
+.error-icon {
+  color: #f44336;
+  animation: shake 0.6s ease-out;
+}
+
+.invite-icon {
+  color: #667eea;
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-5px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(5px);
+  }
+}
+
+/* Loading */
+.loading {
+  font-size: 16px;
+  color: #667eea;
+  font-weight: 500;
+}
+
+.error-message {
+  background-color: #ffebee;
+  border: 1px solid #ffcdd2;
+  color: #c62828;
+  padding: 16px;
+  border-radius: 6px;
+  margin-top: 24px;
+  font-size: 14px;
+}
+
+.invitation-error {
+  text-align: center;
+}
+
+.invitation-error h1 {
+  color: #f44336;
+}
+
+/* Actions */
+.invitation-actions {
+  margin: 32px 0 24px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.invitation-actions button {
+  padding: 14px 24px;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-primary {
+  background-color: #667eea;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #5568d3;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+  background-color: #f0f0f0;
+  color: #333;
+  border: 2px solid #ddd;
+}
+
+.btn-secondary:hover {
+  background-color: #e8e8e8;
+  border-color: #667eea;
+  color: #667eea;
+  transform: translateY(-2px);
+}
+
+.or-text {
+  color: #ccc;
+  font-size: 14px;
+  margin: 8px 0 !important;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .accept-invitation-page {
+    padding: 16px;
+  }
+
+  .invitation-container {
+    padding: 32px 20px;
+  }
+
+  .invitation-container h1 {
+    font-size: 24px;
+  }
+
+  .invitation-container p {
+    font-size: 14px;
+  }
+
+  .loading-icon,
+  .success-icon,
+  .invite-icon,
+  .error-icon {
+    font-size: 48px;
+  }
+}

@@ -103,6 +103,17 @@ A mobile-first web app for recording scores during the tabletop game **Harmonies
      ON games FOR SELECT
      USING (auth.uid() = user_id);
 
+   CREATE POLICY "Invited players can view their games"
+     ON games FOR SELECT
+     USING (
+       EXISTS (
+         SELECT 1 FROM game_invitations
+         WHERE game_invitations.game_id = games.id
+         AND game_invitations.invited_user_id = auth.uid()
+         AND game_invitations.status = 'accepted'
+       )
+     );
+
    CREATE POLICY "Users can insert their own games"
      ON games FOR INSERT
      WITH CHECK (auth.uid() = user_id);
@@ -110,6 +121,17 @@ A mobile-first web app for recording scores during the tabletop game **Harmonies
    CREATE POLICY "Users can update their own games"
      ON games FOR UPDATE
      USING (auth.uid() = user_id);
+
+   CREATE POLICY "Invited players can update their games"
+     ON games FOR UPDATE
+     USING (
+       EXISTS (
+         SELECT 1 FROM game_invitations
+         WHERE game_invitations.game_id = games.id
+         AND game_invitations.invited_user_id = auth.uid()
+         AND game_invitations.status = 'accepted'
+       )
+     );
 
    CREATE POLICY "Users can delete their own games"
      ON games FOR DELETE
@@ -126,6 +148,17 @@ A mobile-first web app for recording scores during the tabletop game **Harmonies
        )
      );
 
+   CREATE POLICY "Invited players can view players from their games"
+     ON game_players FOR SELECT
+     USING (
+       EXISTS (
+         SELECT 1 FROM game_invitations
+         WHERE game_invitations.game_id = game_players.game_id
+         AND game_invitations.invited_user_id = auth.uid()
+         AND game_invitations.status = 'accepted'
+       )
+     );
+
    CREATE POLICY "Users can insert players to their games"
      ON game_players FOR INSERT
      WITH CHECK (
@@ -133,6 +166,17 @@ A mobile-first web app for recording scores during the tabletop game **Harmonies
          SELECT 1 FROM games
          WHERE games.id = game_players.game_id
          AND games.user_id = auth.uid()
+       )
+     );
+
+   CREATE POLICY "Invited players can insert players to their games"
+     ON game_players FOR INSERT
+     WITH CHECK (
+       EXISTS (
+         SELECT 1 FROM game_invitations
+         WHERE game_invitations.game_id = game_players.game_id
+         AND game_invitations.invited_user_id = auth.uid()
+         AND game_invitations.status = 'accepted'
        )
      );
 
@@ -146,6 +190,17 @@ A mobile-first web app for recording scores during the tabletop game **Harmonies
        )
      );
 
+   CREATE POLICY "Invited players can update players in their games"
+     ON game_players FOR UPDATE
+     USING (
+       EXISTS (
+         SELECT 1 FROM game_invitations
+         WHERE game_invitations.game_id = game_players.game_id
+         AND game_invitations.invited_user_id = auth.uid()
+         AND game_invitations.status = 'accepted'
+       )
+     );
+
    CREATE POLICY "Users can delete players from their games"
      ON game_players FOR DELETE
      USING (
@@ -153,6 +208,17 @@ A mobile-first web app for recording scores during the tabletop game **Harmonies
          SELECT 1 FROM games
          WHERE games.id = game_players.game_id
          AND games.user_id = auth.uid()
+       )
+     );
+
+   CREATE POLICY "Invited players can delete players from their games"
+     ON game_players FOR DELETE
+     USING (
+       EXISTS (
+         SELECT 1 FROM game_invitations
+         WHERE game_invitations.game_id = game_players.game_id
+         AND game_invitations.invited_user_id = auth.uid()
+         AND game_invitations.status = 'accepted'
        )
      );
    ```

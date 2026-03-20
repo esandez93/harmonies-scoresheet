@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { useAuth } from '../context/AuthContext';
 import { ScoreCard } from '../components/ScoreCard';
+import { InvitePlayerModal } from '../components/InvitePlayerModal';
 import '../styles/game-detail.css';
 
 const RESOURCES = ['green', 'grey', 'yellow', 'red', 'blue'];
@@ -59,7 +61,9 @@ const playerToDB = (gameId, player) => {
 export const GameDetail = () => {
   const { gameId } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [game, setGame] = useState(null);
+  const [userUsername, setUserUsername] = useState('');
   const [players, setPlayers] = useState([
     createNewPlayer(),
     createNewPlayer(),
@@ -70,10 +74,18 @@ export const GameDetail = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
   const [hasChanges, setHasChanges] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [playerToDelete, setPlayerToDelete] = useState(null);
 
   useEffect(() => {
     fetchGameData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameId]);
+
+  useEffect(() => {
+    fetchUserProfile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   const fetchGameData = async () => {
     try {
@@ -96,37 +108,57 @@ export const GameDetail = () => {
         .eq('game_id', gameId)
         .order('player_name');
 
+      let loadedPlayers;
       if (!playerError && playerData) {
-        const loadedPlayers = playerData.map((p) => playerFromDB(p));
+        loadedPlayers = playerData.map((p) => playerFromDB(p));
         // Ensure at least 4 players shown
         while (loadedPlayers.length < 4) {
           loadedPlayers.push(createNewPlayer());
         }
-        setPlayers(loadedPlayers);
       } else {
         // Table doesn't exist or no data - start with 4 blank players
-        setPlayers([
+        loadedPlayers = [
           createNewPlayer(),
           createNewPlayer(),
           createNewPlayer(),
           createNewPlayer(),
-        ]);
+        ];
       }
 
+      setPlayers(loadedPlayers);
       setHasChanges(false);
     } catch (err) {
       // On error, just start with 4 blank players
-      setPlayers([
+      const blankPlayers = [
         createNewPlayer(),
         createNewPlayer(),
         createNewPlayer(),
         createNewPlayer(),
-      ]);
+      ];
+
+      setPlayers(blankPlayers);
       if (!err.message.includes('does not exist')) {
         setError(err.message);
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchUserProfile = async () => {
+    if (!user) return;
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('username')
+        .eq('id', user.id)
+        .single();
+
+      if (!error && data) {
+        setUserUsername(data.username);
+      }
+    } catch (err) {
+      console.error('Error fetching user profile:', err);
     }
   };
 
@@ -171,15 +203,64 @@ export const GameDetail = () => {
   };
 
   const handleDeletePlayer = (playerId) => {
+    setPlayerToDelete(playerId);
+  };
+
+  const confirmDeletePlayer = async () => {
+    if (!playerToDelete) return;
+
+    // Find the player to delete
+    const playerToRemove = players.find((p) => p.id === playerToDelete);
+    if (!playerToRemove) return;
+
+    // If it's a saved player (not temporary), delete from database
+    if (!playerToRemove.id.startsWith('temp-')) {
+      try {
+        // Delete all invitations matching this player name (invited users who accepted)
+        // This prevents them from seeing the game when their invitation is deleted
+        const { error: deleteInvError } = await supabase
+          .from('game_invitations')
+          .delete()
+          .eq('game_id', gameId)
+          .eq('invited_username', playerToRemove.name);
+
+        if (deleteInvError && !deleteInvError.message.includes('No rows')) {
+          console.warn('Warning deleting invitations:', deleteInvError);
+        }
+
+        // Delete the player
+        const { error: deletePlayerError } = await supabase
+          .from('game_players')
+          .delete()
+          .eq('id', playerToRemove.id);
+
+        if (deletePlayerError) {
+          setError(`Failed to delete player: ${deletePlayerError.message}`);
+          setPlayerToDelete(null);
+          return;
+        }
+      } catch (err) {
+        setError(`Error deleting player: ${err.message}`);
+        setPlayerToDelete(null);
+        return;
+      }
+    }
+
+    // Remove from local state
     setPlayers((prev) =>
-      prev.filter((p) => p.id !== playerId).length >= 4
-        ? prev.filter((p) => p.id !== playerId)
+      prev.filter((p) => p.id !== playerToDelete).length >= 4
+        ? prev.filter((p) => p.id !== playerToDelete)
         : [
-            ...prev.filter((p) => p.id !== playerId),
+            ...prev.filter((p) => p.id !== playerToDelete),
             createNewPlayer(),
           ]
     );
     setHasChanges(true);
+    setPlayerToDelete(null);
+  };
+
+  const cancelDeletePlayer = () => {
+    setPlayerToDelete(null);
   };
 
   const handleSaveGame = async () => {
@@ -254,6 +335,13 @@ export const GameDetail = () => {
           ← Back
         </button>
         <h1>{game.name || 'Unnamed Game'}</h1>
+        <button
+          onClick={() => setShowInviteModal(true)}
+          className="btn-invite"
+          title="Invite other players to this game"
+        >
+          + Invite Player
+        </button>
       </header>
 
       <main className="game-content-scoresheet">
@@ -270,6 +358,39 @@ export const GameDetail = () => {
           isSaving={isSaving}
         />
       </main>
+
+      {showInviteModal && (
+        <InvitePlayerModal
+          gameId={gameId}
+          gameName={game.name || 'Game'}
+          invitedByUsername={userUsername}
+          onInvitationSent={() => setShowInviteModal(false)}
+          onClose={() => setShowInviteModal(false)}
+        />
+      )}
+
+      {playerToDelete && (
+        <div className="modal-overlay">
+          <div className="modal-content confirmation-modal">
+            <h2>Delete Player?</h2>
+            <p>
+              Are you sure you want to remove{' '}
+              <strong>
+                {players.find((p) => p.id === playerToDelete)?.name || 'this player'}
+              </strong>{' '}
+              from the game? This action cannot be undone.
+            </p>
+            <div className="modal-actions">
+              <button onClick={confirmDeletePlayer} className="btn-danger">
+                Delete Player
+              </button>
+              <button onClick={cancelDeletePlayer} className="btn-secondary">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

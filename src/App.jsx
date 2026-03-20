@@ -5,6 +5,7 @@ import { SignUp } from './pages/SignUp';
 import { Dashboard } from './pages/Dashboard';
 import { GameDetail } from './pages/GameDetail';
 import { NewGame } from './pages/NewGame';
+import { AcceptInvitation } from './pages/AcceptInvitation';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -37,6 +38,7 @@ const AuthRoute = ({ children }) => {
 function AppRoutes() {
   return (
     <Routes>
+      <Route path="/invite/:token" element={<AcceptInvitation />} />
       <Route
         path="/login"
         element={

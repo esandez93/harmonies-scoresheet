@@ -40,6 +40,13 @@
   width: 100%;
 }
 
+.form-group small {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: #9ca3af;
+}
+
 .auth-box button {
   width: 100%;
   margin-top: 20px;
